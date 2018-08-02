@@ -13,10 +13,14 @@ negating node distances before pushing them and negating them again after
 popping them. To modify this implementation to find the maximum spanning tree,
 the two negation steps can be skipped to prioritize the max edges.
 
-Time Complexity: O(m log n) where m is the number of edges and n is the number
-of nodes.
+Time Complexity:
+- O(m log n) per call to prim(), where m is the number of edges and n is the
+  number of nodes.
 
-Space Complexity: O(n) auxiliary on the number of nodes.
+Space Complexity:
+- O(max(n, m)) for storage of the graph, where n the number of nodes and m is
+  the number of edges.
+- O(n) auxiliary heap space for prim().
 
 */
 
@@ -29,24 +33,25 @@ std::vector<std::pair<int, int> > adj[MAXN], mst;
 
 int prim(int nodes) {
   mst.clear();
-  std::vector<bool> vis(nodes);
-  int u, v, w, total_dist = 0;
+  std::vector<bool> visit(nodes);
+  int total_dist = 0;
   for (int i = 0; i < nodes; i++) {
-    if (vis[i])
+    if (visit[i]) {
       continue;
-    vis[i] = true;
+    }
+    visit[i] = true;
     std::priority_queue<std::pair<int, std::pair<int, int> > > pq;
     for (int j = 0; j < (int)adj[i].size(); j++) {
       pq.push(std::make_pair(-adj[i][j].second,
                              std::make_pair(i, adj[i][j].first)));
     }
     while (!pq.empty()) {
-      w = -pq.top().first;
-      u = pq.top().second.first;
-      v = pq.top().second.second;
+      int u = pq.top().second.first;
+      int v = pq.top().second.second;
+      int w = -pq.top().first;
       pq.pop();
-      if (vis[u] && !vis[v]) {
-        vis[v] = true;
+      if (visit[u] && !visit[v]) {
+        visit[v] = true;
         if (v != i) {
           mst.push_back(std::make_pair(u, v));
           total_dist += w;
@@ -89,7 +94,8 @@ int main() {
   add_edge(5, 6, 3);
   add_edge(6, 4, 4);
   cout << "Total distance: " << prim(7) << endl;
-  for (int i = 0; i < (int)mst.size(); i++)
+  for (int i = 0; i < (int)mst.size(); i++) {
     cout << mst[i].first << " <-> " << mst[i].second << endl;
+  }
   return 0;
 }

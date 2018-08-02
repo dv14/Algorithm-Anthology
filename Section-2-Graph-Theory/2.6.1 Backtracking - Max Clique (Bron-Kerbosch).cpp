@@ -1,21 +1,29 @@
 /*
 
-Given an undirected graph, bron_kerbosh() find a clique in the graph with the
-largest number of nodes. A clique is a subset of a graph's nodes such that all
-pairs of nodes in the subset are connected by an edge. bron_kerbosh_weighted()
-additionally takes a global array w[] specifying a weight value for each node,
-returning the clique in the graph that has maximum total weight. Both functions
-apply to a global, pre-populated adjacency matrix adj[] which must satisfy the
-condition that adj[u][v] is true if and only if adj[v][u] is true, for all pairs
-of nodes u and v respectively between 0 (inclusive) and the total number of
-nodes (exclusive) as passed in the function argument.
+Given an undirected graph, max_clique() returns the size of the maximum clique,
+that is, the largest subset of nodes such that all pairs of nodes in the subset
+are connected by an edge. max_clique_weighted() additionally uses a global array
+w[] specifying a weight value for each node, returning the clique in the graph
+that has maximum total weight.
 
-Time Complexity: O(3^(n/3)) on the number of nodes.
-Space Complexity: O(n) auxiliary on the number of nodes.
+Both functions apply to a global, pre-populated adjacency matrix adj[] which
+must satisfy the condition that adj[u][v] is true if and only if adj[v][u] is
+true, for all pairs of nodes u and v respectively between 0 (inclusive) and the
+total number of nodes (exclusive) as passed in the function argument. Note that
+max_clique_weighted() is an efficient implementation using bitmasks of unsigned
+64-bit integers, thus requiring the number of nodes to be less than 64.
+
+Time Complexity:
+- O(3^(n/3)) per call to max_clique() and max_clique_weighted(), where n
+  is the number of nodes.
+
+Space Complexity:
+- O(n^2) for storage of the graph, where n is the number of nodes.
+- O(n) auxiliary stack space for max_clique() and max_clique_weighted().
 
 */
 
-#include <algorithm>  // std::max()
+#include <algorithm>
 #include <bitset>
 #include <vector>
 
@@ -27,16 +35,19 @@ bool adj[MAXN][MAXN];
 int w[MAXN];
 
 int rec(int nodes, bits &curr, bits &pool, bits &excl) {
-  if (pool.none() && excl.none())
+  if (pool.none() && excl.none()) {
     return curr.count();
+  }
   int ans = 0, u = 0;
   for (int v = 0; v < nodes; v++) {
-    if (pool[v] || excl[v])
+    if (pool[v] || excl[v]) {
       u = v;
+    }
   }
   for (int v = 0; v < nodes; v++) {
-    if (!pool[v] || adj[u][v])
+    if (!pool[v] || adj[u][v]) {
       continue;
+    }
     bits ncurr, npool, nexcl;
     for (int i = 0; i < nodes; i++) {
       ncurr[i] = curr[i];
@@ -53,7 +64,7 @@ int rec(int nodes, bits &curr, bits &pool, bits &excl) {
   return ans;
 }
 
-int bron_kerbosch(int nodes) {
+int max_clique(int nodes) {
   bits curr, excl, pool;
   pool.flip();
   return rec(nodes, curr, pool, excl);
@@ -68,8 +79,9 @@ int rec(const std::vector<uint64> &g, uint64 curr, uint64 pool, uint64 excl) {
     }
     return res;
   }
-  if (pool == 0)
+  if (pool == 0) {
     return -1;
+  }
   int res = -1, pivot = __builtin_ctzll(pool | excl);
   uint64 z = pool & ~g[pivot];
   int u = __builtin_ctzll(z);
@@ -82,14 +94,13 @@ int rec(const std::vector<uint64> &g, uint64 curr, uint64 pool, uint64 excl) {
   return res;
 }
 
-// This is an efficient implementation using bitmasks.
-// Precondition: The number of nodes must be less than 64.
-int bron_kerbosch_weighted(int nodes) {
+int max_clique_weighted(int nodes) {
   std::vector<uint64> g(nodes, 0);
   for (int i = 0; i < nodes; i++) {
     for (int j = 0; j < nodes; j++) {
-      if (adj[i][j])
+      if (adj[i][j]) {
         g[i] |= 1LL << j;
+      }
     }
   }
   return rec(g, 0, (1LL << nodes) - 1, 0);
@@ -100,7 +111,8 @@ int bron_kerbosch_weighted(int nodes) {
 #include <cassert>
 
 void add_edge(int u, int v) {
-  adj[u][v] = adj[v][u] = true;
+  adj[u][v] = true;
+  adj[v][u] = true;
 }
 
 int main() {
@@ -117,7 +129,7 @@ int main() {
   w[2] = 30;
   w[3] = 40;
   w[4] = 50;
-  assert(bron_kerbosch(5) == 4);
-  assert(bron_kerbosch_weighted(5) == 120);
+  assert(max_clique(5) == 4);
+  assert(max_clique_weighted(5) == 120);
   return 0;
 }

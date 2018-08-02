@@ -1,26 +1,30 @@
 /*
 
-Let k be the number of distinct values in a range [lo, hi) of n total values.
-Coordinate compression takes only the integers from [0, k) and reassigns them to
-every value in [lo, hi) such that the relative ordering of the original range is
-preserved. That is, if a[] is an array containing the original values and b[] is
-an array containing the compressed values, then every pair i, j (0 <= i, j <= n)
-satisfies a[i] < a[j] if and only if b[i] < b[j].
+Given two ForwardIterators as a range [lo, hi) of n numerical elements, reassign
+each element in the range to an integer in [0, k), where k is the number of
+distinct elements in the original range, while preserving the initial relative
+ordering of elements. That is, if a[] is an array of the original values and b[]
+is the compressed values, then every pair of indices i, j (0 <= i, j < n) shall
+satisfy a[i] < a[j] if and only if b[i] < b[j].
 
-Both implementations below are equivalent, taking RandomAccessIterators lo and
-hi as the range [lo, hi) to be compressed. Version 1 performs the compression by
-sorting the array, removing duplicates, and binary searching for the position of
-each original value. Version 2 achieves the same result by inserting all values
-in a balanced binary search tree (std::map) which automatically removes
-duplicate values and supports efficient lookups of the compressed values.
+Both implementations below require operator < to be defined on the iterator's
+value type. Version 1 performs the compression by sorting the array, removing
+duplicates, and binary searching for the position of each original value.
+Version 2 achieves the same result by inserting all values in a balanced binary
+search tree (std::map) which automatically removes duplicate values and supports
+efficient lookups of the compressed values.
 
-Time Complexity: O(n log n) on the distance between lo and hi.
-Space Complexity: O(n) auxiliary.
+Time Complexity:
+- O(n log n) per call to either function, where n is the distance between lo and
+  hi.
+
+Space Complexity:
+- O(n) auxiliary heap space.
 
 */
 
-#include <algorithm>  // std::lower_bound(), std::sort(), std::unique()
-#include <iterator>  // std::iterator_traits
+#include <algorithm>
+#include <iterator>
 #include <map>
 #include <vector>
 
@@ -43,9 +47,9 @@ template<class It> void compress2(It lo, It hi) {
   for (It it = lo; it != hi; ++it) {
     m[*it] = 0;
   }
-  typename std::map<T, int>::iterator mit = m.begin();
-  for (int id = 0; mit != m.end(); mit++) {
-    mit->second = id++;
+  typename std::map<T, int>::iterator it = m.begin();
+  for (int id = 0; it != m.end(); it++) {
+    it->second = id++;
   }
   for (It it = lo; it != hi; ++it) {
     *it = m[*it];
@@ -64,8 +68,9 @@ template<class It> void compress2(It lo, It hi) {
 using namespace std;
 
 template<class It> void print_range(It lo, It hi) {
-  while (lo != hi)
+  while (lo != hi) {
     cout << *lo++ << " ";
+  }
   cout << endl;
 }
 

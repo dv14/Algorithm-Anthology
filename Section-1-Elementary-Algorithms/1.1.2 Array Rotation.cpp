@@ -3,7 +3,7 @@
 These functions are equivalent to std::rotate(), taking three iterators lo, mid,
 and hi (lo <= mid <= hi) to perform a left rotation on the range [lo, hi). After
 the function call, [lo, hi) will comprise of the concatenation of the elements
-initially in [mid, hi) + [lo, mid). That is, the range [lo, hi) will be
+originally in [mid, hi) + [lo, mid). That is, the range [lo, hi) will be
 rearranged in such a way that the element at mid becomes the first element of
 the new range and the element at mid - 1 becomes the last element, all while
 preserving the relative ordering of elements within the two rotated subarrays.
@@ -15,44 +15,52 @@ three simple inversions. Version 3 requires RandomAccessIterators, applying a
 juggling algorithm which first divides the range into gcd(hi - lo, mid - lo)
 sets and then rotates the corresponding elements in each set.
 
-Time Complexity: O(n) on the distance between lo and hi.
-Space Complexity: O(1) auxiliary.
+Time Complexity:
+- O(n) per call to both functions, where n is the distance between lo and hi.
+
+Space Complexity:
+- O(1) auxiliary.
 
 */
 
-#include <algorithm>  // std::reverse(), std::rotate(), std::swap()
+#include <algorithm>
 
-template<class It> void rotate1(It lo, It mid, It hi) {
+template<class It>
+void rotate1(It lo, It mid, It hi) {
   It next = mid;
   while (lo != next) {
-    std::swap(*lo++, *next++);
-    if (next == hi)
+    std::iter_swap(lo++, next++);
+    if (next == hi) {
       next = mid;
-    else if (lo == mid)
+    } else if (lo == mid) {
       mid = next;
+    }
   }
 }
 
-template<class It> void rotate2(It lo, It mid, It hi) {
+template<class It>
+void rotate2(It lo, It mid, It hi) {
   std::reverse(lo, mid);
   std::reverse(mid, hi);
   std::reverse(lo, hi);
 }
 
 int gcd(int a, int b) {
-  return b == 0 ? a : gcd(b, a % b);
+  return (b == 0) ? a : gcd(b, a % b);
 }
 
-template<class It> void rotate3(It lo, It mid, It hi) {
+template<class It>
+void rotate3(It lo, It mid, It hi) {
   int n = hi - lo, jump = mid - lo;
   int g = gcd(jump, n), cycle = n / g;
   for (int i = 0; i < g; i++) {
     int curr = i, next;
     for (int j = 0; j < cycle - 1; j++) {
       next = curr + jump;
-      if (next >= n)
+      if (next >= n) {
         next -= n;
-      std::swap(*(lo + curr), *(lo + next));
+      }
+      std::iter_swap(lo + curr, lo + next);
       curr = next;
     }
   }
@@ -91,7 +99,7 @@ int main() {
   vector<int> v(a, a + 10);
   cout << "before sort:  ";
   for (int i = 0; i < (int)v.size(); i++) {
-    cout << v[i] << ' ';
+    cout << v[i] << " ";
   }
   cout << endl;
 
@@ -101,7 +109,7 @@ int main() {
   }
   cout << "after sort:   ";
   for (int i = 0; i < (int)v.size(); i++) {
-    cout << v[i] << ' ';
+    cout << v[i] << " ";
   }
   cout << endl;
 
@@ -109,7 +117,7 @@ int main() {
   rotate2(v.begin(), v.begin() + 1, v.end());
   cout << "rotate left:  ";
   for (int i = 0; i < (int)v.size(); i++) {
-    cout << v[i] << ' ';
+    cout << v[i] << " ";
   }
   cout << endl;
 
@@ -117,7 +125,7 @@ int main() {
   rotate3(v.rbegin(), v.rbegin() + 1, v.rend());
   cout << "rotate right: ";
   for (int i = 0; i < (int)v.size(); i++) {
-    cout << v[i] << ' ';
+    cout << v[i] << " ";
   }
   cout << endl;
 

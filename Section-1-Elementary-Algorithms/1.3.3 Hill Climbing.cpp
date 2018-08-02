@@ -1,9 +1,9 @@
 /*
 
-Given a continuous function f(x, y) to double and a (possibly random) initial
-guess (x0, y0), returns a potential global minimum found through hill-climbing.
-Optionally, two double pointers x_ans and y_ans may be passed to store the input
-coordinates to f at which the returned minimum value is attained.
+Given a continuous function f(x, y) to double and a (possibly arbitrary) initial
+guess (x0, y0), return a potential global minimum found through hill-climbing.
+Optionally, two double pointers critical_x and critical_y may be passed to store
+the input points to f at which the returned minimum value is attained.
 
 Hill-climbing is a heuristic which starts at the guess, then considers taking
 a single step in each of a fixed number of directions. The direction with the
@@ -13,36 +13,38 @@ and the same process repeats until a desired absolute error is reached. The
 technique's success heavily depends on the behavior of f and the initial guess.
 Therefore, the result is not guaranteed to be the global minimum.
 
-Time Complexity: At most O(d log n) call will be made to f, where d is the
-number of directions considered at each position and n is the search space that
-is approximately proportional to the maximum possible step size divided by the
-minimum possible step size.
+Time Complexity:
+- O(d log n) call will be made to f, where d is the number of directions
+  considered at each position and n is the search space that is approximately
+  proportional to the maximum possible step size divided by the minimum possible
+  step size.
 
-Space Complexity: O(1) auxiliary.
+Space Complexity:
+- O(1) auxiliary.
 
 */
 
+#include <cstdlib>
 #include <cmath>
 
-template<class BinaryFunction>
-double find_min(BinaryFunction f, double x0, double y0,
-                double *x_ans = 0, double *y_ans = 0) {
-  const double PI = acos(-1.0);
-  const double STEP_MIN = 1e-9, STEP_MAX = 1e6;
-  const int NUM_DIRECTIONS = 6;
+template<class ContinuousFunction>
+double find_min(ContinuousFunction f, double x0, double y0,
+                double *critical_x = NULL, double *critical_y = NULL,
+                const double STEP_MIN = 1e-9, const double STEP_MAX = 1e6,
+                const int NUM_DIRECTIONS = 6) {
+  static const double PI = acos(-1.0);
   double x = x0, y = y0, res = f(x0, y0);
   for (double step = STEP_MAX; step > STEP_MIN; ) {
     double best = res, best_x = x, best_y = y;
     bool found = false;
     for (int i = 0; i < NUM_DIRECTIONS; i++) {
-      double a = 2.0 * PI * i / NUM_DIRECTIONS;
-      double x2 = x + step*cos(a);
-      double y2 = y + step*sin(a);
-      double val = f(x2, y2);
-      if (best > val) {
+      double a = 2.0*PI*i / NUM_DIRECTIONS;
+      double x2 = x + step*cos(a), y2 = y + step*sin(a);
+      double value = f(x2, y2);
+      if (best > value) {
         best_x = x2;
         best_y = y2;
-        best = val;
+        best = value;
         found = true;
       }
     }
@@ -54,9 +56,9 @@ double find_min(BinaryFunction f, double x0, double y0,
       res = best;
     }
   }
-  if (x_ans != 0 && y_ans != 0) {
-    *x_ans = x;
-    *y_ans = y;
+  if (critical_x != NULL && critical_y != NULL) {
+    *critical_x = x;
+    *critical_y = y;
   }
   return res;
 }

@@ -1,15 +1,20 @@
 /*
 
-Given a starting node in an unweighted, directed graph, traverse to every
-connected node and determine the minimum distance to each such node. Optionally,
-output the shortest path to a specific destination node using the shortest-path
-tree from the predecessor array pred[]. bfs() applies to a global, pre-populated
-adjacency list adj[] which must only consist of nodes numbered with integers
-between 0 (inclusive) and the total number of nodes (exclusive), as passed in
-the function argument.
+Given a starting node in an unweighted, directed graph, visit every connected
+node and determine the minimum distance to each such node. Optionally, output
+the shortest path to a specific destination node using the shortest-path tree
+from the predecessor array pred[]. bfs() applies to a global, pre-populated
+adjacency list adj[] which consists of only nodes numbered with integers between
+0 (inclusive) and the total number of nodes (exclusive), as passed in the
+function argument.
 
-Time Complexity: O(n) on the number of nodes.
-Space Complexity: O(n) auxiliary on the number of nodes.
+Time Complexity:
+- O(n) per call to bfs(), where n is the number of nodes.
+
+Space Complexity:
+- O(max(n, m)) for storage of the graph, where n is the number of nodes and m
+  is the number of edges.
+- O(n) auxiliary heap space for bfs().
 
 */
 
@@ -22,30 +27,29 @@ std::vector<int> adj[MAXN];
 int dist[MAXN], pred[MAXN];
 
 void bfs(int nodes, int start) {
-  std::vector<bool> vis(nodes, false);
+  std::vector<bool> visit(nodes, false);
   for (int i = 0; i < nodes; i++) {
     dist[i] = INF;
     pred[i] = -1;
   }
-  int u, v, d;
   std::queue<std::pair<int, int> > q;
   q.push(std::make_pair(start, 0));
   while (!q.empty()) {
-    u = q.front().first;
-    d = q.front().second;
+    int u = q.front().first;
+    int d = q.front().second;
     q.pop();
-    vis[u] = true;
+    visit[u] = true;
     for (int j = 0; j < (int)adj[u].size(); j++) {
-      v = adj[u][j];
-      if (vis[v])
+      int v = adj[u][j];
+      if (visit[v]) {
         continue;
+      }
       dist[v] = d + 1;
       pred[v] = u;
       q.push(std::make_pair(v, d + 1));
     }
   }
 }
-
 
 /*** Example Usage and Output:
 
@@ -79,8 +83,8 @@ int main() {
   adj[2].push_back(3);
   adj[0].push_back(3);
   bfs(4, start);
-  cout << "The shortest distance from " << start;
-  cout << " to " << dest << " is " << dist[dest] << "." << endl;
+  cout << "The shortest distance from " << start << " to " << dest << " is "
+       << dist[dest] << "." << endl;
   print_path(dest);
   return 0;
 }

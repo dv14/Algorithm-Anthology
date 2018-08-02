@@ -16,7 +16,7 @@ A cut-point (i.e. cut-node, or articulation point) is any node whose removal
 increases the number of connected components in the graph.
 
 A biconnected component of a graph is a maximally biconnected subgraph. A
-biconnected graph is a connected and "nonseparable" graph, meaning that if any
+biconnected graph is a connected and "non-separable" graph, meaning that if any
 node were to be removed, the graph will remain connected. Thus, a biconnected
 graph has no articulation points.
 
@@ -24,42 +24,49 @@ Any connected graph decomposes into a tree of biconnected components called the
 "block tree" of the graph. An unconnected graph will thus decompose into a
 "block forest."
 
-See: http://en.wikipedia.org/wiki/Biconnected_component
+Time Complexity:
+- O(max(n, m)) per call to tarjan() and get_block_forest(), where n is the
+  number of nodes and m is the number of edges.
 
-Time Complexity: O(max(n, m)) on the number of nodes and edges.
-Space Complexity: O(max(n, m)) auxiliary on the number of nodes and edges.
+Space Complexity:
+- O(max(n, m)) for storage of the graph, where n the number of nodes and m is
+  the number of edges
+- O(n) auxiliary stack space for tarjan().
+- O(1) auxiliary stack space for get_block_forest().
 
 */
 
-#include <algorithm>  // std::fill(), std::min()
+#include <algorithm>
 #include <vector>
 
 const int MAXN = 100;
 int timer, lowlink[MAXN], tin[MAXN], comp[MAXN];
-std::vector<bool> vis(MAXN);
+std::vector<bool> visit(MAXN);
 std::vector<int> adj[MAXN], bcc_forest[MAXN];
 std::vector<int> stack, cutpoints;
 std::vector<std::vector<int> > bcc;
 std::vector<std::pair<int, int> > bridges;
 
 void dfs(int u, int p) {
-  vis[u] = true;
+  visit[u] = true;
   lowlink[u] = tin[u] = timer++;
   stack.push_back(u);
   int v, children = 0;
   bool cutpoint = false;
   for (int j = 0; j < (int)adj[u].size(); j++) {
     v = adj[u][j];
-    if (v == p)
+    if (v == p) {
       continue;
-    if (vis[v]) {
+    }
+    if (visit[v]) {
       lowlink[u] = std::min(lowlink[u], tin[v]);
     } else {
       dfs(v, u);
       lowlink[u] = std::min(lowlink[u], lowlink[v]);
       cutpoint |= (lowlink[v] >= tin[u]);
-      if (lowlink[v] > tin[u])
+      if (lowlink[v] > tin[u]) {
         bridges.push_back(std::make_pair(u, v));
+      }
       children++;
     }
   }
@@ -87,11 +94,12 @@ void tarjan(int nodes) {
   stack.clear();
   std::fill(lowlink, lowlink + nodes, 0);
   std::fill(tin, tin + nodes, 0);
-  std::fill(vis.begin(), vis.end(), false);
+  std::fill(visit.begin(), visit.end(), false);
   timer = 0;
   for (int i = 0; i < nodes; i++) {
-    if (!vis[i])
+    if (!visit[i]) {
       dfs(i, -1);
+    }
   }
 }
 
@@ -101,13 +109,15 @@ void get_block_forest(int nodes) {
     bcc_forest[i].clear();
   }
   for (int i = 0; i < (int)bcc.size(); i++) {
-    for (int j = 0; j < (int)bcc[i].size(); j++)
+    for (int j = 0; j < (int)bcc[i].size(); j++) {
       comp[bcc[i][j]] = i;
+    }
   }
   for (int i = 0; i < nodes; i++) {
     for (int j = 0; j < (int)adj[i].size(); j++) {
-      if (comp[i] != comp[adj[i][j]])
+      if (comp[i] != comp[adj[i][j]]) {
         bcc_forest[comp[i]].push_back(comp[adj[i][j]]);
+      }
     }
   }
 }
@@ -154,22 +164,26 @@ int main() {
   tarjan(8);
   get_block_forest(8);
   cout << "Cut-points:";
-  for (int i = 0; i < (int)cutpoints.size(); i++)
+  for (int i = 0; i < (int)cutpoints.size(); i++) {
     cout << " " << cutpoints[i];
+  }
   cout << endl << "Bridges:" << endl;
-  for (int i = 0; i < (int)bridges.size(); i++)
+  for (int i = 0; i < (int)bridges.size(); i++) {
     cout << bridges[i].first << " " << bridges[i].second << endl;
+  }
   cout << "Edge-Biconnected Components:" << endl;
   for (int i = 0; i < (int)bcc.size(); i++) {
-    for (int j = 0; j < (int)bcc[i].size(); j++)
+    for (int j = 0; j < (int)bcc[i].size(); j++) {
       cout << bcc[i][j] << " ";
+    }
     cout << endl;
   }
-  cout << "Adjacency List for Block Forest:\n";
+  cout << "Adjacency List for Block Forest:" << endl;
   for (int i = 0; i < (int)bcc.size(); i++) {
     cout << i << " =>";
-    for (int j = 0; j < (int)bcc_forest[i].size(); j++)
+    for (int j = 0; j < (int)bcc_forest[i].size(); j++) {
       cout << " " << bcc_forest[i][j];
+    }
     cout << endl;
   }
   return 0;

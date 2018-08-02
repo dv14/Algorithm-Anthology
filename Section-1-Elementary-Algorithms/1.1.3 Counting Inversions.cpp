@@ -5,31 +5,41 @@ pairs (i, j) such that i < j and a[i] > a[j]. This is roughly how "close" an
 array is to being sorted, but is *not* the minimum number of swaps required to
 sort the array. If the array is sorted, then the inversion count is 0. If the
 array is sorted in decreasing order, then the inversion count is maximal. The
-following two functions are each techniques to efficiently count inversion.
+following two functions are each techniques to efficiently count inversions.
+
+- inversions(lo, hi) uses merge sort to return the number of inversions given
+  two RandomAccessIterators as a range [lo, hi). The input range will be sorted
+  after the function call. This requires operator < to be defined on the
+  iterators' value type.
+- inversions(n, a[]) uses a power-of-two trick to return the number of
+  inversions for an array a[] of n nonnegative integers. After calling the
+  function, every value of a[] will be set to 0. The time and space complexity
+  of this operation are functions of the magnitude of the maximum value in a[].
+  To instead obtain a running time of O(n log n) on the number of elements,
+  coordinate compression may be applied to a[] beforehand so that its maximum is
+  strictly less than the length n itself.
+
+Time Complexity:
+- O(n log n) per call to inversion(lo, hi), where n is the distance between lo
+  and hi.
+- O(n log m) per call to inversions(n, a[]) where n is the distance between lo
+  and hi and m is maximum value in a[].
+
+Space Complexity:
+- O(n) auxiliary space and O(log n) stack space for inversions(lo, hi).
+- O(m) auxiliary heap space for inversions(n, a[]).
 
 */
 
-#include <algorithm>  // std::fill(), std::max()
-#include <iterator>  // std::iterator_traits
+#include <algorithm>
+#include <iterator>
 #include <vector>
 
-/*
-
-Version 1: Merge Sort
-
-Returns the number of inversions of the range [lo, hi), where lo and hi are
-RandomAccessIterators. Note that the range [lo, hi) will become sorted after
-the function call. The value type of the input iterators must have operator<
-defined appropriately.
-
-Time Complexity: O(n log n) on the distance between lo and hi.
-Space Complexity: O(n) auxiliary.
-
-*/
-
-template<class It> long long inversions(It lo, It hi) {
-  if (hi - lo < 2)
+template<class It>
+long long inversions(It lo, It hi) {
+  if (hi - lo < 2) {
     return 0;
+  }
   It mid = lo + (hi - lo - 1)/2, a = lo, c = mid + 1;
   long long res = 0;
   res += inversions(lo, mid + 1);
@@ -45,32 +55,19 @@ template<class It> long long inversions(It lo, It hi) {
     }
   }
   if (a > mid) {
-    for (It k = c; k < hi; ++k)
-      merged.push_back(*k);
+    for (It it = c; it != hi; ++it) {
+      merged.push_back(*it);
+    }
   } else {
-    for (It k = a; k <= mid; ++k)
-      merged.push_back(*k);
+    for (It it = a; it <= mid; ++it) {
+      merged.push_back(*it);
+    }
   }
-  for (int i = 0; i < hi - lo; i++)
-    *(lo + i) = merged[i];
+  for (It it = lo; it != hi; ++it) {
+    *it = merged[it - lo];
+  }
   return res;
 }
-
-/*
-
-Version 2: Power-of-Two Trick
-
-Returns the number of inversions for an array a[] of n nonnegative integers.
-Note that after calling the function, every value of a[] will be set to 0.
-
-Here, the time and space complexities depend on the magnitude of the maximum
-value in a[]. Therefore for a running time of O(n log n), coordinate compression
-may be applied to a[] so its maximum is strictly less than the length n itself.
-
-Time Complexity: O(m log m), where m is maximum value in the array.
-Space Complexity: O(m) auxiliary.
-
-*/
 
 long long inversions(int n, int a[]) {
   int mx = 0;
@@ -78,18 +75,20 @@ long long inversions(int n, int a[]) {
     mx = std::max(mx, a[i]);
   }
   long long res = 0;
-  std::vector<int> cnt(mx);
+  std::vector<int> count(mx);
   while (mx > 0) {
-    std::fill(cnt.begin(), cnt.end(), 0);
+    std::fill(count.begin(), count.end(), 0);
     for (int i = 0; i < n; i++) {
-      if (a[i] % 2 == 0)
-        res += cnt[a[i] / 2];
-      else
-        cnt[a[i] / 2]++;
+      if (a[i] % 2 == 0) {
+        res += count[a[i] / 2];
+      } else {
+        count[a[i] / 2]++;
+      }
     }
     mx = 0;
-    for (int i = 0; i < n; i++)
+    for (int i = 0; i < n; i++) {
       mx = std::max(mx, a[i] /= 2);
+    }
   }
   return res;
 }

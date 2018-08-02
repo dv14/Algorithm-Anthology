@@ -1,11 +1,10 @@
 /*
 
-Given a function f mapping a set of int to itself and an initial x-coordinate in
-the set, returns a pair containing the (position, length) of a cycle in the
+Given a function f mapping a set of integers to itself and an x-coordinate in
+the set, return a pair containing the (position, length) of a cycle in the
 sequence of numbers obtained from repeatedly composing f with itself starting
 with the initial x. Formally, since f maps a finite set S to itself, some value
 is guaranteed to eventually repeat in the sequence:
-
   x[0], x[1]=f(x[0]), x[2]=f(x[1]), ..., x[n]=f(x[n - 1]), ...
 
 There must exist a pair of indices i and j (i < j) such that x[i] = x[j]. When
@@ -21,19 +20,19 @@ forward and the "hare" two steps forward in the sequence, comparing the sequence
 values at each step. The first value which is simultaneously pointed to by both
 pointers is the start of the sequence.
 
-Explanation: https://en.wikipedia.org/wiki/Cycle_detection#Tortoise_and_hare
+Time Complexity:
+- O(m + n) per call to find_cycle_floyd(), where m is the smallest index of the
+  sequence which is the beginning of a cycle, and n is the cycle's length.
 
-Time Complexity: O(mu + lambda), where mu is the smallest index of the sequence
-which is the beginning of a cycle, and lambda is the cycle's length.
-
-Space Complexity: O(1) auxiliary.
+Space Complexity:
+- O(1) auxiliary.
 
 */
 
-#include <utility>  // std::pair
+#include <utility>
 
 template<class IntFunction>
-std::pair<int, int> find_cycle(IntFunction f, int x0) {
+std::pair<int, int> find_cycle_floyd(IntFunction f, int x0) {
   int tortoise = f(x0), hare = f(f(x0));
   while (tortoise != hare) {
     tortoise = f(tortoise);
@@ -84,8 +83,8 @@ void verify(int x0, int start, int length) {
 }
 
 int main () {
-  const int x0 = 0;
-  pair<int, int> res = find_cycle(f, x0);
+  int x0 = 0;
+  pair<int, int> res = find_cycle_floyd(f, x0);
   assert(res == make_pair(4, 2));
   verify(x0, res.first, res.second);
   return 0;

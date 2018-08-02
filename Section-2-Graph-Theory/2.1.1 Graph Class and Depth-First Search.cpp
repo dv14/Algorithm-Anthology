@@ -6,66 +6,68 @@ as an adjacency list, which is a space efficient representation that is also
 time-efficient for traversals.
 
 The following class implements a simple graph using adjacency lists, along with
-depth-first search and a few applications. The constructor takes a boolean
+depth-first search and a few other applications. The constructor takes a Boolean
 argument which specifies whether the instance is a directed or undirected graph.
 The nodes of the graph are identified by integers indices numbered consecutively
-starting from 0. The total number nodes will automatically increase based upon
-the maximum argument passed to add_edge() so far.
+starting from 0. The total number of nodes will automatically increase based on
+the maximum node index passed to add_edge() so far.
 
 Time Complexity:
 - O(1) amortized per call to add_edge(), or O(max(n, m)) for n calls where the
   maximum node index passed as an argument is m.
 - O(max(n, m)) per call for dfs(), has_cycle(), is_tree(), or is_dag(), where n
-  and m are the number of nodes and edges respectively.
+  is the number of nodes and and m is the number of edges.
 - O(1) per call to all other public member functions.
 
 Space Complexity:
-- O(max(n, m)) on the number of nodes and edges for storage of the graph.
-- O(n) auxiliary per call to dfs(), has_cycle(), is_tree(), and is_dag(), where
-  n is the number of nodes.
-- O(1) auxiliary per call to all other public member functions.
+- O(max(n, m)) for storage of the graph, where n is the number of nodes and m
+  is the number of edges.
+- O(n) auxiliary stack space for dfs(), has_cycle(), is_tree(), and is_dag().
+- O(1) auxiliary for all other public member functions.
 
 */
 
-#include <algorithm>  // std::max()
+#include <algorithm>
 #include <vector>
 
 class graph {
   std::vector<std::vector<int> > adj;
-  bool _is_directed;
+  bool directed;
 
-  template<class Action>
-  void dfs(int n, std::vector<bool> &vis, Action act) const {
-    act(n);
-    vis[n] = true;
+  template<class ReportFunction>
+  void dfs(int n, std::vector<bool> &visit, ReportFunction f) const {
+    f(n);
+    visit[n] = true;
     std::vector<int>::const_iterator it;
     for (it = adj[n].begin(); it != adj[n].end(); ++it) {
-      if (!vis[*it])
-        dfs(*it, vis, act);
+      if (!visit[*it]) {
+        dfs(*it, visit, f);
+      }
     }
   }
 
-  bool has_cycle(int n, int prev, std::vector<bool> &vis,
+  bool has_cycle(int n, int prev, std::vector<bool> &visit,
                  std::vector<bool> &onstack) const {
-    vis[n] = true;
+    visit[n] = true;
     onstack[n] = true;
     std::vector<int>::const_iterator it;
     for (it = adj[n].begin(); it != adj[n].end(); ++it) {
-      if (is_directed() && onstack[*it])
+      if (directed && onstack[*it]) {
         return true;
-      if (!is_directed() && vis[*it] && *it != prev)
+      }
+      if (!directed && visit[*it] && *it != prev) {
         return true;
-      if (!vis[*it] && has_cycle(*it, n, vis, onstack))
+      }
+      if (!visit[*it] && has_cycle(*it, n, visit, onstack)) {
         return true;
+      }
     }
     onstack[n] = false;
     return false;
   }
 
  public:
-  graph(bool is_directed = true) {
-    this->_is_directed = is_directed;
-  }
+  graph(bool directed = true) : directed(directed) {}
 
   int nodes() const {
     return (int)adj.size();
@@ -76,41 +78,43 @@ class graph {
   }
 
   void add_edge(int u, int v) {
-    if (u >= (int)adj.size() || v >= (int)adj.size()) {
+    int n = adj.size();
+    if (u >= n || v >= n) {
       adj.resize(std::max(u, v) + 1);
     }
     adj[u].push_back(v);
-    if (!is_directed()) {
+    if (!directed) {
       adj[v].push_back(u);
     }
   }
 
   bool is_directed() const {
-    return _is_directed;
+    return directed;
   }
 
   bool has_cycle() const {
-    std::vector<bool> vis(adj.size(), false);
-    std::vector<bool> onstack(adj.size(), false);
-    for (int i = 0; i < (int)adj.size(); i++) {
-      if (!vis[i] && has_cycle(i, -1, vis, onstack))
+    int n = adj.size();
+    std::vector<bool> visit(n, false), onstack(n, false);
+    for (int i = 0; i < n; i++) {
+      if (!visit[i] && has_cycle(i, -1, visit, onstack)) {
         return true;
+      }
     }
     return false;
   }
 
   bool is_tree() const {
-    return !is_directed() && !has_cycle();
+    return !directed && !has_cycle();
   }
 
   bool is_dag() const {
-    return is_directed() && !has_cycle();
+    return directed && !has_cycle();
   }
 
-  template<class Action>
-  void dfs(int start, Action act) const {
-    std::vector<bool> vis(adj.size(), false);
-    dfs(start, vis, act);
+  template<class ReportFunction>
+  void dfs(int start, ReportFunction f) const {
+    std::vector<bool> visit(adj.size(), false);
+    dfs(start, visit, f);
   }
 };
 
@@ -124,7 +128,7 @@ DFS order: 0 1 2 3 4 5 6 7 8 9 10 11
 #include <iostream>
 using namespace std;
 
-void print_node(int n) {
+void print(int n) {
   cout << n << " ";
 }
 
@@ -143,7 +147,7 @@ int main() {
     g.add_edge(8, 9);
     g.add_edge(8, 10);
     cout << "DFS order: ";
-    g.dfs(0, print_node);
+    g.dfs(0, print);
     cout << endl;
     assert(g[0].size() == 3);
     assert(g.is_dag());

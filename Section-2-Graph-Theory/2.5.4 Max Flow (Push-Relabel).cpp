@@ -4,20 +4,26 @@ Given a flow network with integer capacities, find the maximum flow from a given
 source node to a given sink node. The flow of a given edge u -> v is defined as
 the minimum of its capacity and the sum of the flows of all incoming edges of u.
 push_relabel() applies to a global adjacency matrix cap[][] and returns the
-maximum flow. Although the push relabel algorithm is considered one of the most
-efficient maximum flow algorithms, it cannot take advantage of the maximum flow
-being less than n^3 (in which case the Ford-Fulkerson or Edmonds-Karp algorithms
-may be more efficient).
+maximum flow.
 
-Time Complexity: O(n^3) on the number of nodes.
-Space Complexity: O(n^2) auxiliary on the number of nodes.
+Although the push-relabel algorithm is considered one of the most efficient
+maximum flow algorithms, it cannot take advantage of the magnitude of the
+maximum flow being less than n^3 (in which case the Ford-Fulkerson or
+Edmonds-Karp algorithms may be more efficient).
+
+Time Complexity:
+- O(n^3) per call to push_relabel(), where n is the number of nodes.
+
+Space Complexity:
+- O(n^2) for storage of the flow network, where n is the number of nodes.
+- O(n) auxiliary heap space for push_relabel().
 
 */
 
-#include <algorithm>  // std::fill(), std::min()
+#include <algorithm>
 #include <vector>
 
-const int MAXN = 100, INF = 0x3F3F3F3F;
+const int MAXN = 100, INF = 0x3f3f3f3f;
 int cap[MAXN][MAXN], f[MAXN][MAXN];
 
 int push_relabel(int nodes, int source, int sink) {
@@ -31,21 +37,23 @@ int push_relabel(int nodes, int source, int sink) {
     f[i][source] = -f[source][i];
     e[i] = cap[source][i];
   }
-  int sz = 0;
+  int size = 0;
   for (;;) {
-    if (sz == 0) {
+    if (size == 0) {
       for (int i = 0; i < nodes; i++) {
         if (i != source && i != sink && e[i] > 0) {
-          if (sz != 0 && h[i] > h[maxh[0]])
-            sz = 0;
-          maxh[sz++] = i;
+          if (size != 0 && h[i] > h[maxh[0]]) {
+            size = 0;
+          }
+          maxh[size++] = i;
         }
       }
     }
-    if (sz == 0)
+    if (size == 0) {
       break;
-    while (sz != 0) {
-      int i = maxh[sz - 1];
+    }
+    while (size != 0) {
+      int i = maxh[size - 1];
       bool pushed = false;
       for (int j = 0; j < nodes && e[i] != 0; j++) {
         if (h[i] == h[j] + 1 && cap[i][j] - f[i][j] > 0) {
@@ -54,20 +62,23 @@ int push_relabel(int nodes, int source, int sink) {
           f[j][i] -= df;
           e[i] -= df;
           e[j] += df;
-          if (e[i] == 0)
-            sz--;
+          if (e[i] == 0) {
+            size--;
+          }
           pushed = true;
         }
       }
-      if (pushed)
+      if (pushed) {
         continue;
+      }
       h[i] = INF;
       for (int j = 0; j < nodes; j++) {
-        if (h[i] > h[j] + 1 && cap[i][j] - f[i][j] > 0)
+        if (h[i] > h[j] + 1 && cap[i][j] - f[i][j] > 0) {
           h[i] = h[j] + 1;
+        }
       }
       if (h[i] > h[maxh[0]]) {
-        sz = 0;
+        size = 0;
         break;
       }
     }

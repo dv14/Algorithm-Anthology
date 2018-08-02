@@ -1,8 +1,8 @@
 /*
 
 Given a starting node in a weighted, directed graph with nonnegative weights
-only, traverse to every connected node and determine the minimum distance to
-each. Optionally, output the shortest path to a specific destination node using
+only, visit every connected node and determine the minimum distance to each such
+node. Optionally, output the shortest path to a specific destination node using
 the shortest-path tree from the predecessor array pred[]. dijkstra() applies to
 a global, pre-populated adjacency list adj[] which must only consist of nodes
 numbered with integers between 0 (inclusive) and the total number of nodes
@@ -22,10 +22,14 @@ a larger running time of O(n*m) on the number of nodes and edges respectively.
 While it is as slow in the worst case as the Bellman-Ford algorithm, the SPFA
 still tends to outperform in the average case.
 
-Time Complexity: O(m log n) where m is the number of edges and n is the number
-of nodes.
+Time Complexity:
+- O(m log n) for dijkstra(), where m is the number of edges and n is the number
+  of nodes.
 
-Space Complexity: O(n) auxiliary on the number of nodes.
+Space Complexity:
+- O(max(n, m)) for storage of the graph, where n is the number of nodes and m
+  is the number of edges.
+- O(n) auxiliary heap space for dijkstra().
 
 */
 
@@ -38,23 +42,23 @@ std::vector<std::pair<int, int> > adj[MAXN];
 int dist[MAXN], pred[MAXN];
 
 void dijkstra(int nodes, int start) {
-  std::vector<bool> vis(nodes, false);
+  std::vector<bool> visit(nodes, false);
   for (int i = 0; i < nodes; i++) {
     dist[i] = INF;
     pred[i] = -1;
   }
-  int u, v;
   dist[start] = 0;
   std::priority_queue<std::pair<int, int> > pq;
   pq.push(std::make_pair(0, start));
   while (!pq.empty()) {
-    u = pq.top().second;
+    int u = pq.top().second;
     pq.pop();
-    vis[u] = true;
+    visit[u] = true;
     for (int j = 0; j < (int)adj[u].size(); j++) {
-      v = adj[u][j].first;
-      if (vis[v])
+      int v = adj[u][j].first;
+      if (visit[v]) {
         continue;
+      }
       if (dist[v] > dist[u] + adj[u][j].second) {
         dist[v] = dist[u] + adj[u][j].second;
         pred[v] = u;
@@ -95,8 +99,8 @@ int main() {
   adj[1].push_back(make_pair(3, 4));
   adj[2].push_back(make_pair(3, 1));
   dijkstra(4, start);
-  cout << "The shortest distance from " << start;
-  cout << " to " << dest << " is " << dist[dest] << "." << endl;
+  cout << "The shortest distance from " << start << " to " << dest << " is "
+       << dist[dest] << "." << endl;
   print_path(dest);
   return 0;
 }
